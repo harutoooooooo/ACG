@@ -4,11 +4,10 @@ uniform vec3 uSpecularColor;
 uniform float uShininess;
 
 varying vec3 vNormal;
-varying vec3 vViewPos;
+varying vec3 vFragPos;
 
 void main() {
     vec3 normal = normalize(vNormal);
-    vec3 viewDir = normalize(vViewPos);
 
     // ambient
     vec3 ambient = vec3(0.1) * uColor;
@@ -18,6 +17,7 @@ void main() {
     vec3 diffuse = diff * uColor;
 
     // specular
+    vec3 viewDir = normalize(cameraPosition - vFragPos);
     vec3 reflectDir = reflect(-uLightDirection, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uShininess);
     vec3 specular = spec * uSpecularColor;

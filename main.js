@@ -50,6 +50,9 @@ new OBJLoader().load('/dragon.obj', (obj) => {
         if (child.isMesh) child.material = doragonMaterial;
     });
 
+    obj.rotation.y = Math.PI / 2;
+    obj.updateMatrixWorld();
+
     obj.position.set(0, 0, 0);
     scene.add(obj);
 });

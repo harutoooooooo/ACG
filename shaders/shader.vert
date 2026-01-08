@@ -1,11 +1,10 @@
 varying vec3 vNormal;
-varying vec3 vViewPos;
+varying vec3 vFragPos;
 
 void main() {
-    vNormal = normalize(normalMatrix * normal);
+    vNormal = normalize(mat3(modelMatrix) * normal);
 
-    vec4 FragPos = modelViewMatrix * vec4(position, 1.0);
-    vViewPos = -FragPos.xyz;
+    vFragPos = (modelMatrix * vec4(position, 1.0)).xyz;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
 }
