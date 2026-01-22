@@ -75,11 +75,13 @@ float stars(vec3 dir, float density) {
                 // twinkle
                 float twinkle = sin(uTime * (2.0 + hash31(cellPos + 5.0) * 4.0) + hash31(cellPos + 6.0) * 6.28);
                 twinkle = 0.7 + 0.3 * twinkle;
-                
-                star += brightness * twinkle * smoothstep(0.05, 0.0, d);
+
+                // adjust size of stars
+                star += brightness * twinkle * smoothstep(0.15, 0.0, d);
             }
         }
     }
+
     return star;
 }
 

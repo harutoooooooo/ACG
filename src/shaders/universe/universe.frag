@@ -37,12 +37,12 @@ void main() {
 
     // lighting
     float diff = max(0.0, dot(normal, uLightDirection));
-    diff = diff * 0.6 + 0.4; // addambient
+    diff = diff * 0.6 + 0.4; // add ambient
 
     // specular
     vec3 viewDir = normalize(-vFragPos);
     vec3 reflectDir = reflect(-uLightDirection, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 4.0);
     spec *= uMetallic;
 
     // emissive
