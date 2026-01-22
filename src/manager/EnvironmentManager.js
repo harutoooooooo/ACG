@@ -34,6 +34,14 @@ export class EnvironmentManager {
         return new Promise((resolve) => {
             new GLTFLoader().load('/rikocamtex.glb', (gltf) => {
                 this.sharedAssets.buildingRoot = gltf.scene;
+
+                // マテリアル名を保存
+                this.sharedAssets.buildingRoot.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.userData.originalMatName = child.material.name ? child.material.name.toLowerCase() : '';
+                    }
+                });
+
                 resolve();
             });
         });

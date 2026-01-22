@@ -26,7 +26,7 @@ export class UrbanEnvironment extends BaseEnvironment {
 
             root.traverse((child) => {
                 if (child.isMesh) {
-                    const name = child.material.name ? child.material.name.toLowerCase() : '';
+                    const name = child.userData.originalMatName || '';
 
                     if (name.includes('window')) {
                         child.material = this.materials.window;
