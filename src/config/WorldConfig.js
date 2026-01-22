@@ -1,4 +1,8 @@
 export const WorldConfig = {
+    Camera: {
+        yaw: 0.9,
+        pitch: -0.3
+    },
     Urban: {
         modelScale: 1.0,
 
@@ -22,7 +26,7 @@ export const WorldConfig = {
         // 魚が泳ぐ範囲
         bounds: {
             width: 400.0,
-            height: 50.0,
+            height: 100.0,
             depth: 180.0
         },
 

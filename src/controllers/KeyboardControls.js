@@ -4,7 +4,7 @@ import * as THREE from 'three';
  * シンプルなキーボード＋マウスコントロール（FPS風）
  */
 export class KeyboardControls {
-  constructor(camera, domElement) {
+  constructor(camera, domElement, config) {
     this.camera = camera;
     this.domElement = domElement;
 
@@ -13,8 +13,8 @@ export class KeyboardControls {
     this.lookSpeed = 0.002;
 
     // カメラ回転角度（オイラー角）
-    this.pitch = 0; // 上下回転
-    this.yaw = 0;   // 左右回転
+    this.pitch = config.pitch; // 上下回転
+    this.yaw = config.yaw;   // 左右回転
 
     // 床固定モード
     this.grounded = false;
