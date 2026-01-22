@@ -13,10 +13,16 @@ uniform float uFogFar;
 uniform float uFogDensity;
 uniform float uFogMax;
 
+// スケール対応の深度パラメータ
+uniform float uDepthMin;
+uniform float uDepthMax;
+
 varying vec3 vNormal;
 varying vec3 vFragPos;
 
 const float eps = 1e-6;
+
+#include <fog_pars_fragment>
 
 // --- Noise Functions ---
 float hash(vec3 p) { p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
@@ -49,7 +55,7 @@ void main() {
     diff = pow(diff * 0.5 + 0.5, 2.0);
 
     float caus = caustic(pos, uTime);
-    float depthFactor = smoothstep(-50.0, 10.0, pos.y);
+    float depthFactor = smoothstep(uDepthMin, uDepthMax, pos.y);
     vec3 causticLight = uCausticColor * caus * depthFactor * 1.5;
     vec3 diffuse = diff * baseColor * 0.5 + causticLight * 0.5;
     vec3 ambient = uDeepWaterColor * baseColor * 0.6;
@@ -57,4 +63,6 @@ void main() {
     vec3 albedo = ambient + diffuse;
 
     gl_FragColor = vec4(albedo, 1.0);
+
+    #include <fog_fragment>
 }

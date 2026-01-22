@@ -3,6 +3,8 @@ attribute float aSpeed;
 attribute float aOffset;
 varying vec3 vNormal;
 
+#include <fog_pars_vertex>
+
 void main() {
     vNormal = normalize(normalMatrix * mat3(instanceMatrix) * normal);
     vec3 pos = position;
@@ -13,5 +15,9 @@ void main() {
 
     vec4 worldPosition = instanceMatrix * vec4(pos, 1.0);
 
-    gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    vec4 mvPosition = modelViewMatrix * worldPosition;
+
+    gl_Position = projectionMatrix * mvPosition;
+
+    #include <fog_vertex>
 }
