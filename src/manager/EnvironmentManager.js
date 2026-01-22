@@ -16,6 +16,7 @@ export class EnvironmentManager {
 
         this.scene = null;
         this.currentEnvironment = null;
+        this.currentModeName = null; // 現在の環境名（SSOT）
 
         this.sharedAssets = {
             buildingRoot: null
@@ -56,6 +57,9 @@ export class EnvironmentManager {
             this.currentEnvironment.dispose();
         }
 
+        // 環境名を保存（SSOT）
+        this.currentModeName = modeName;
+
         switch (modeName) {
             case 'Urban':
                 this.currentEnvironment = new UrbanEnvironment(
@@ -73,6 +77,10 @@ export class EnvironmentManager {
         if (this.currentEnvironment) {
             this.currentEnvironment.init(this.sharedAssets);
         }
+    }
+
+    getCurrentEnvironment() {
+        return this.currentModeName;
     }
 
     update(elapsedTime) {
