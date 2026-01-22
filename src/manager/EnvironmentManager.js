@@ -4,8 +4,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { UrbanEnvironment } from '../environments/UrbanEnvironment.js';
 import { UnderwaterEnvironment } from '../environments/UnderwaterEnvironment.js';
 
-import { WorldConfig } from '../config/WorldConfig.js';
-
 // 環境を管理するシングルトンクラス
 export class EnvironmentManager {
     static instance = null;
@@ -34,6 +32,7 @@ export class EnvironmentManager {
         return new Promise((resolve) => {
             new GLTFLoader().load('/rikocamtex.glb', (gltf) => {
                 this.sharedAssets.buildingRoot = gltf.scene;
+                this.sharedAssets.buildingRoot.scale.set(1, 1, 1);
                 resolve();
             });
         });
@@ -48,16 +47,13 @@ export class EnvironmentManager {
             this.currentEnvironment.dispose();
         }
 
+        // 新しい環境クラスのインスタンス化
         switch (modeName) {
             case 'Urban':
-                this.currentEnvironment = new UrbanEnvironment(
-                    this.scene, this.renderer, this.camera, WorldConfig.Urban
-                );
+                this.currentEnvironment = new UrbanEnvironment(this.scene, this.renderer, this.camera);
                 break;
             case 'Underwater':
-                this.currentEnvironment = new UnderwaterEnvironment(
-                    this.scene, this.renderer, this.camera, WorldConfig.Underwater
-                );
+                this.currentEnvironment = new UnderwaterEnvironment(this.scene, this.renderer, this.camera);
                 break;
         }
 
