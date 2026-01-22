@@ -4,9 +4,9 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 import vertexShader from './shaders/shader.vert';
-import windowFragmentShader from './shaders/window.frag';
-import roofFragmentShader from './shaders/roof.frag';
-import wallFragmentShader from './shaders/wall.frag';
+import windowFragmentShader from './shaders/building/window.frag';
+import roofFragmentShader from './shaders/building/roof.frag';
+import wallFragmentShader from './shaders/building/wall.frag';
 
 // Scene setup
 // -----------

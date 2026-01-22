@@ -4,9 +4,9 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Boid } from './boid.js';
 
 import vertexShader from './shaders/shader.vert';
-import buildingFragmentShader from './shaders/underwater.frag';
-import fishVertexShader from './shaders/fish.vert';
-import fishFragmentShader from './shaders/fish.frag';
+import buildingFragmentShader from './shaders/underwater/underwater.frag';
+import fishVertexShader from './shaders/underwater/fish.vert';
+import fishFragmentShader from './shaders/underwater/fish.frag';
 
 const CAMERA_FOV = 75;
 const CAMERA_NEAR = 1.0;
