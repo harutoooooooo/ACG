@@ -3,6 +3,7 @@ import { EnvironmentManager } from './manager/EnvironmentManager.js';
 import { KeyboardControls } from './controllers/KeyboardControls.js';
 import { MovementUI } from './ui/MovementUI.js';
 import { MinimapUI } from './ui/MinimapUI.js';
+import { WorldConfig } from './config/WorldConfig.js';
 
 const CAMERA_FOV = 75;
 const CAMERA_NEAR = 0.1;
@@ -19,7 +20,7 @@ document.body.appendChild(renderer.domElement);
 
 const envManager = new EnvironmentManager();
 
-const controls = new KeyboardControls(camera, renderer.domElement);
+const controls = new KeyboardControls(camera, renderer.domElement, WorldConfig.Camera);
 const movementUI = new MovementUI(envManager); // EnvironmentManagerを渡す（SSOT）
 const minimapUI = new MinimapUI(scene, camera);
 
@@ -86,9 +87,9 @@ createLights();
 
 // 非同期で初期化
 envManager.init(scene, renderer, camera).then(() => {
-    envManager.switchMode('Urban');
+    envManager.switchMode('Underwater');
     // UIを初期環境に同期（SSOT）
-    movementUI.setEnvironment('Urban');
+    movementUI.setEnvironment('Underwater');
     setupCollisions();
 });
 
