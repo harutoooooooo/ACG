@@ -2,8 +2,9 @@ uniform vec3 uLightDirection;
 uniform vec3 uSpecularColor;
 uniform float uShininess;
 
-uniform vec3 uWallColor;
+uniform vec3 uRoofColor;
 uniform float uTime;
+uniform float uScale;
 
 varying vec3 vNormal;
 varying vec3 vFragPos;
@@ -33,21 +34,15 @@ float fbm(vec2 p) {
     return f;
 }
 
-vec4 getWallTexture(vec3 pos, vec3 normal) {
-    vec2 uv;
+vec4 getRoofTexture(vec3 pos) {
+    vec2 uv = pos.xz;
 
-    if (abs(normal.z) > 0.5) {
-        uv = pos.xy;
-    } else {
-        uv = pos.zy;
-    }
+    // コンクリート/アスファルトの質感
+    float asphalt = fbm(uv * 10.0 * uScale);
+    float grain = hash(uv * 50.0 * uScale);  // 細かいざらつき
 
-    // コンクリート壁の質感
-    float dirt = fbm(uv * 2.0); // 大きいムラ
-    float grain = hash(uv * 50.0); // 細かいざらつき
-
-    vec3 color = uWallColor * (0.6 + 0.4 * dirt);
-    color = mix(color, vec3(0.8), grain * 0.2);
+    vec3 color = uRoofColor * (0.8 + 0.3 * asphalt);
+    color = mix(color, vec3(0.7), grain * 0.1);
 
     float specStr = 0.1;
 
@@ -58,7 +53,7 @@ void main() {
     vec3 normal = normalize(vNormal);
     vec3 viewDir = normalize(cameraPosition - vFragPos);
 
-    vec4 texData = getWallTexture(vFragPos, normal);
+    vec4 texData = getRoofTexture(vFragPos);
     vec3 baseColor = texData.rgb;
     float specularStrength = texData.a;
 
