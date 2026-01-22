@@ -9,8 +9,9 @@ import roofFragmentShader from '../shaders/building/roof.frag';
 import wallFragmentShader from '../shaders/building/wall.frag';
 
 export class UrbanEnvironment extends BaseEnvironment {
-    constructor(scene, renderer, camera) {
+    constructor(scene, renderer, camera, config) {
         super(scene, renderer, camera);
+        this.config = config;
         this.materials = {};
     }
 
@@ -37,9 +38,8 @@ export class UrbanEnvironment extends BaseEnvironment {
                 }
             });
 
-            // スケールと位置の調整 (元のコードに準拠)
             root.position.set(0, 0, 0);
-            root.scale.set(0.01, 0.01, 0.01);
+            root.scale.setScalar(this.config.modelScale);
 
             this.scene.add(root);
         }
@@ -59,7 +59,6 @@ export class UrbanEnvironment extends BaseEnvironment {
     }
 
     _setupMaterials() {
-        // 共通Uniforms
         const commonUniforms = {
             uLightDirection: { value: new THREE.Vector3(0.5, 0.5, 0.5).normalize() },
             uSpecularColor: { value: new THREE.Color('#ffffff') },

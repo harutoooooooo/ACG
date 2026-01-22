@@ -13,6 +13,10 @@ uniform float uFogFar;
 uniform float uFogDensity;
 uniform float uFogMax;
 
+// スケール対応の深度パラメータ
+uniform float uDepthMin;
+uniform float uDepthMax;
+
 varying vec3 vNormal;
 varying vec3 vFragPos;
 
@@ -49,7 +53,8 @@ void main() {
     diff = pow(diff * 0.5 + 0.5, 2.0);
 
     float caus = caustic(pos, uTime);
-    float depthFactor = smoothstep(-50.0, 10.0, pos.y);
+    // uniformから深度パラメータを取得（デフォルト値: uDepthMin=-50.0, uDepthMax=10.0）
+    float depthFactor = smoothstep(uDepthMin, uDepthMax, pos.y);
     vec3 causticLight = uCausticColor * caus * depthFactor * 1.5;
     vec3 diffuse = diff * baseColor * 0.5 + causticLight * 0.5;
     vec3 ambient = uDeepWaterColor * baseColor * 0.6;
