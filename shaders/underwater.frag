@@ -6,9 +6,17 @@ uniform float uScale;
 uniform vec3 uDeepWaterColor;
 uniform vec3 uShallowWaterColor;
 uniform vec3 uCausticColor;
+uniform vec3 uRockColor;
+uniform vec3 uSedimentColor;
+uniform float uFogNear;
+uniform float uFogFar;
+uniform float uFogDensity;
+uniform float uFogMax;
 
 varying vec3 vNormal;
 varying vec3 vFragPos;
+
+const float eps = 1e-6;
 
 // --- Noise Functions ---
 float hash(vec3 p) { p = fract(p * 0.3183099 + .1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
@@ -28,55 +36,36 @@ void main() {
     vec3 normal = normalize(vNormal);
     vec3 pos = vFragPos;
 
-    // ----------------------------------------------------
-    // 1. マテリアル生成 (落ち着いた岩肌)
-    // ----------------------------------------------------
+    // 岩肌
     float rockNoise = noise(pos * uScale * 3.0);
 
-    // 色を全体的に暗く統一
-    vec3 rockColor = vec3(0.05, 0.08, 0.1);     // ほぼ黒に近い青
-    vec3 sedimentColor = vec3(0.2, 0.25, 0.3);  // 白ではなく、少し明るいグレー青
-
-    // 沈殿物 (Sediment) の計算
-    // ★修正: コントラストを下げて、マダラ模様を「うっすらとした汚れ」に変える
+    // 沈殿物 (Sediment)
     float upFactor = normal.y;
-    // ノイズの影響を弱め、smoothstepの幅を広げてグラデーションにする
     float sedimentMask = smoothstep(0.4, 0.9, upFactor * (0.6 + 0.4 * rockNoise));
 
-    vec3 baseColor = mix(rockColor, sedimentColor, sedimentMask);
+    vec3 baseColor = mix(uRockColor, uSedimentColor, sedimentMask);
 
-
-    // ----------------------------------------------------
-    // 2. ライティング
-    // ----------------------------------------------------
     float diff = max(0.0, dot(normal, uLightDirection));
     diff = pow(diff * 0.5 + 0.5, 2.0);
 
     float caus = caustic(pos, uTime);
-
-    // 光の模様も深さによって弱める
     float depthFactor = smoothstep(-50.0, 10.0, pos.y);
     vec3 causticLight = uCausticColor * caus * depthFactor * 1.5;
-
-    // ベース色に光を乗せる
     vec3 diffuse = diff * baseColor * 0.5 + causticLight * 0.5;
-
-    // 環境光
     vec3 ambient = uDeepWaterColor * baseColor * 0.6;
 
-    vec3 finalColor = ambient + diffuse;
+    vec3 albedo = ambient + diffuse;
 
-    // ----------------------------------------------------
-    // 3. 深度フォグ (Depth Fog) - ★ここを修正
-    // ----------------------------------------------------
+    // Fog
     float dist = length(cameraPosition - vFragPos);
 
-    // ★修正: 30m〜100mにかけてゆっくり霧を濃くする（以前は2m〜30mだった）
-    float fogFactor = smoothstep(30.0, 100.0, dist);
+    float t = clamp((dist - uFogNear) / max(eps, uFogFar - uFogNear), 0.0, 1.0);
 
-    vec3 fogColor = mix(uShallowWaterColor, uDeepWaterColor, smoothstep(10.0, -30.0, pos.y));
+    float fogFactor = (1.0 - exp(-uFogDensity * t)) * uFogMax;
 
-    finalColor = mix(finalColor, fogColor, fogFactor);
+    vec3 fogColor = mix(uShallowWaterColor, uDeepWaterColor, smoothstep(30.0, -30.0, pos.y));
+
+    vec3 finalColor = mix(albedo, fogColor, fogFactor);
 
     gl_FragColor = vec4(finalColor, 1.0);
 }
