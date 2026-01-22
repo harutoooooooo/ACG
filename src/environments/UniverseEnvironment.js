@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { BaseEnvironment } from './BaseEnvironment.js';
 
 import vertexShader from '../shaders/universe/universe.vert';
-import fragmentShader from '../shaders/universe/universe.frag';
+import windowFragmentShader from '../shaders/universe/window.frag';
+import wallFragmentShader from '../shaders/universe/wall.frag';
+import roofFragmentShader from '../shaders/universe/roof.frag';
 import backgroundVertexShader from '../shaders/universe/background.vert';
 import backgroundFragmentShader from '../shaders/universe/background.frag';
 
@@ -12,28 +14,44 @@ export class UniverseEnvironment extends BaseEnvironment {
         super(scene, renderer, camera);
         this.config = config;
         this.backgroundMesh = null;
-        this.buildingMaterial = null;
+        this.wallMaterial = null;
+        this.windowMaterial = null;
+        this.roofMaterial = null;
         this.backgroundMaterial = null;
     }
 
     init(sharedAssets) {
         const { shader, modelScale, backgroundRadius } = this.config;
 
-        // set background to black
         this.scene.background = new THREE.Color(0x000510);
         this.scene.fog = null;
 
-        // building shader material
-        this.buildingMaterial = new THREE.ShaderMaterial({
+        this.windowMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uLightDirection: { value: new THREE.Vector3(0.5, 0.5, 0.5).normalize() },
+                uTime: { value: 0.0 }
+            },
+            vertexShader: vertexShader,
+            fragmentShader: windowFragmentShader
+        });
+
+        this.wallMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 uLightDirection: { value: new THREE.Vector3(0.5, 0.5, 0.5).normalize() },
                 uTime: { value: 0.0 },
-                uBaseColor: { value: new THREE.Color().fromArray(shader.baseColor) },
-                uEmissiveColor: { value: new THREE.Color().fromArray(shader.emissiveColor) },
-                uMetallic: { value: shader.metallic }
+                uCameraPosition: { value: new THREE.Vector3() } // Optional but good for specular if relying on view dir
             },
             vertexShader: vertexShader,
-            fragmentShader: fragmentShader
+            fragmentShader: wallFragmentShader
+        });
+
+        this.roofMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uLightDirection: { value: new THREE.Vector3(0.5, 0.5, 0.5).normalize() },
+                uTime: { value: 0.0 }
+            },
+            vertexShader: vertexShader,
+            fragmentShader: roofFragmentShader
         });
 
         // planetarium-like shader material
@@ -60,7 +78,14 @@ export class UniverseEnvironment extends BaseEnvironment {
 
             sharedAssets.buildingRoot.traverse((child) => {
                 if (child.isMesh) {
-                    child.material = this.buildingMaterial;
+                    const name = child.userData.originalMatName || '';
+                    if (name.includes('roof')) {
+                        child.material = this.roofMaterial;
+                    } else if (name.includes('window')) {
+                        child.material = this.windowMaterial;
+                    } else {
+                        child.material = this.wallMaterial;
+                    }
                 }
             });
             this.scene.add(sharedAssets.buildingRoot);
@@ -78,8 +103,12 @@ export class UniverseEnvironment extends BaseEnvironment {
     }
 
     update(elapsedTime) {
-        if (this.buildingMaterial) {
-            this.buildingMaterial.uniforms.uTime.value = elapsedTime;
+        if (this.windowMaterial) {
+            this.windowMaterial.uniforms.uTime.value = elapsedTime;
+        }
+        // Wall material has no uniforms to update
+        if (this.roofMaterial) {
+            this.roofMaterial.uniforms.uTime.value = elapsedTime;
         }
         if (this.backgroundMaterial) {
             this.backgroundMaterial.uniforms.uTime.value = elapsedTime;
@@ -95,9 +124,17 @@ export class UniverseEnvironment extends BaseEnvironment {
         }
 
         // dispose materials
-        if (this.buildingMaterial) {
-            this.buildingMaterial.dispose();
-            this.buildingMaterial = null;
+        if (this.wallMaterial) {
+            this.wallMaterial.dispose();
+            this.wallMaterial = null;
+        }
+        if (this.windowMaterial) {
+            this.windowMaterial.dispose();
+            this.windowMaterial = null;
+        }
+        if (this.roofMaterial) {
+            this.roofMaterial.dispose();
+            this.roofMaterial = null;
         }
         if (this.backgroundMaterial) {
             this.backgroundMaterial.dispose();
