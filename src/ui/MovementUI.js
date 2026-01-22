@@ -73,21 +73,22 @@ export class MovementUI {
           <div class="section-label">Environment</div>
           <div class="section-hint">Press <kbd>E</kbd></div>
         </div>
-        <div class="environment-scroll">
-          <div class="environment-buttons">
-            <button class="env-btn active" data-env="Urban">
-              <span class="env-icon">🏙️</span>
-              <span class="env-name">Urban</span>
-            </button>
-            <button class="env-btn" data-env="Nature">
-              <span class="env-icon">🌿</span>
-              <span class="env-name">Nature</span>
-            </button>
-            <button class="env-btn" data-env="Underwater">
-              <span class="env-icon">🌊</span>
-              <span class="env-name">Underwater</span>
-            </button>
-          </div>
+        <div class="environment-list">
+          <button class="env-btn active" data-env="Urban">
+            <span class="env-icon">🏙️</span>
+            <span class="env-name">Urban</span>
+            <span class="env-check">✓</span>
+          </button>
+          <button class="env-btn" data-env="Nature">
+            <span class="env-icon">🌿</span>
+            <span class="env-name">Nature</span>
+            <span class="env-check">✓</span>
+          </button>
+          <button class="env-btn" data-env="Underwater">
+            <span class="env-icon">🌊</span>
+            <span class="env-name">Underwater</span>
+            <span class="env-check">✓</span>
+          </button>
         </div>
       </div>
 
@@ -347,7 +348,6 @@ export class MovementUI {
       .flight-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         border-color: rgba(255, 255, 255, 0.3);
-        transform: translateX(4px);
       }
 
       .flight-btn.active {
@@ -442,61 +442,58 @@ export class MovementUI {
         color: rgba(255, 255, 255, 0.6);
       }
 
-      /* 環境ボタン */
-      .environment-scroll {
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
+      /* 環境リスト */
+      .environment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 4px;
+        margin-right: -4px;
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
       }
 
-      .environment-scroll::-webkit-scrollbar {
-        height: 4px;
+      .environment-list::-webkit-scrollbar {
+        width: 4px;
       }
 
-      .environment-scroll::-webkit-scrollbar-track {
+      .environment-list::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.05);
         border-radius: 2px;
-        margin: 4px 0;
       }
 
-      .environment-scroll::-webkit-scrollbar-thumb {
+      .environment-list::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.2);
         border-radius: 2px;
       }
 
-      .environment-scroll::-webkit-scrollbar-thumb:hover {
+      .environment-list::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.3);
-      }
-
-      .environment-buttons {
-        display: flex;
-        gap: 10px;
-        padding-bottom: 4px;
       }
 
       .env-btn {
         background: rgba(255, 255, 255, 0.05);
         border: 1.5px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 14px 16px;
+        border-radius: 10px;
+        padding: 10px 12px;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         pointer-events: auto;
         color: rgba(255, 255, 255, 0.7);
-        min-width: 110px;
-        flex-shrink: 0;
+        width: 100%;
+        position: relative;
       }
 
       .env-btn:hover {
         background: rgba(255, 255, 255, 0.1);
         border-color: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
       }
 
       .env-btn.active {
@@ -507,9 +504,10 @@ export class MovementUI {
       }
 
       .env-icon {
-        font-size: 28px;
+        font-size: 20px;
         filter: grayscale(0.5);
         transition: filter 0.3s ease;
+        flex-shrink: 0;
       }
 
       .env-btn.active .env-icon {
@@ -520,6 +518,20 @@ export class MovementUI {
         font-size: 13px;
         font-weight: 600;
         letter-spacing: 0.3px;
+        flex: 1;
+        text-align: left;
+      }
+
+      .env-check {
+        font-size: 16px;
+        color: #667eea;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      .env-btn.active .env-check {
+        opacity: 1;
       }
 
       /* コントロールグリッド */
