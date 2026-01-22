@@ -2,7 +2,6 @@ import * as THREE from 'three';
 // import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Boid } from './boid.js';
 
 import vertexShader from './shaders/shader.vert';
 import windowFragmentShader from './shaders/window.frag';
@@ -92,7 +91,7 @@ function setupWallMaterial() {
 
 // Load 3D Model
 // -------------
-new GLTFLoader().load('/rikocamtexv2.glb', (gltf) => {
+new GLTFLoader().load('/rikocam.glb', (gltf) => {
     const obj = gltf.scene;
 
     obj.traverse((child) => {
