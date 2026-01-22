@@ -29,6 +29,14 @@ document.body.appendChild(renderer.domElement);
 // -------------------
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+
+// 左クリックでパン、右クリックで回転に設定
+controls.mouseButtons = {
+    LEFT: THREE.MOUSE.PAN,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: THREE.MOUSE.ROTATE
+};
+
 // debug Sphere (this shows the current target position of the controls)
 const debugGeometry = new THREE.SphereGeometry(0.01, 16, 16);
 const debugMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
@@ -91,7 +99,7 @@ function setupWallMaterial() {
 
 // Load 3D Model
 // -------------
-new GLTFLoader().load('/rikocam.glb', (gltf) => {
+new GLTFLoader().load('/rikocamtex.glb', (gltf) => {
     const obj = gltf.scene;
 
     obj.traverse((child) => {
