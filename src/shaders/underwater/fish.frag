@@ -17,26 +17,18 @@ varying vec3 vWorldPosition;
 // 汎用関数をインポート
 #include ../functions/math.glsl
 #include ../functions/noise.glsl
+#include ../functions/caustics.glsl
 
 // 簡易コースティクス
-float caustic(vec3 pos, float time) {
-    vec3 p = pos * 0.5 + vec3(time * 0.05, time * 0.05, -time * 0.05);
-    float n1 = noise3D(p * 1.5);
-    float n2 = noise3D(p * 3.0 + vec3(time * 0.1));
-    float n = n1 * n2;
-    n = pow(n, 2.0) * 5.0;
-    return smoothstep(0.1, 0.9, n);
-}
-
 void main() {
     vec3 normal = normalize(vNormal);
 
     // ディフューズライティング
-    float diff = max(0.0, dot(normal, uLightDirection));
-    diff = pow(diff * 0.5 + 0.5, 2.0);
+    float diff = max(0.0, dot(normal, uLightDirection)) * 0.5 + 0.5;
+    diff *= diff;
 
     // コースティクス（魚にも適用）
-    float caus = caustic(vWorldPosition, uTime);
+    float caus = causticTile(vWorldPosition.xz, uTime);
     vec3 causticLight = uCausticColor * caus * uCausticIntensity * 0.3;
 
     // 魚の基本色

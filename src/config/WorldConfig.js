@@ -97,7 +97,7 @@ export const WorldConfig = {
 
         // 魚のメッシュサイズ（定数）
         fish: {
-            count: 500,
+            count: 2500,
             baseScale: 1.5,
             meshRadius: 0.3, // 以前より少し太く
             meshLength: 1.2  // 長さ

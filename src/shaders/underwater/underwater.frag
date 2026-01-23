@@ -26,6 +26,7 @@ uniform float uDepthMax;
 varying vec3 vNormal;
 varying vec3 vFragPos;
 varying float vDiscard;
+varying vec3 vCoralColor;
 
 #include <fog_pars_fragment>
 
@@ -60,34 +61,11 @@ float godRay(vec3 pos, float time) {
 
     float ray = ray1 * ray2;
     ray = smoothstep(0.1, 0.5, ray);
-    return pow(ray, 1.5);
+    return ray * sqrt(ray);
 }
 
 // 彩度を上げる関数
-vec3 saturateColor(vec3 color, float amount) {
-    float gray = dot(color, vec3(0.299, 0.587, 0.114));
-    return mix(vec3(gray), color, amount);
-}
-
-vec3 getCoralColor(vec3 pos) {
-    float n1 = noise3D(pos * 0.2);
-    float n2 = noise3D(pos * 0.2 + vec3(12.0));
-
-    vec3 colPink   = vec3(1.0, 0.35, 0.5);
-    vec3 colPurple = vec3(0.55, 0.3, 0.8);
-    vec3 colOrange = vec3(1.0, 0.55, 0.15);
-    vec3 colTeal   = vec3(0.0, 0.9, 0.75);
-
-    vec3 color = mix(colPink, colPurple, smoothstep(0.2, 0.8, n1));
-    color = mix(color, colOrange, smoothstep(0.4, 0.6, n2));
-
-    float accent = smoothstep(0.7, 0.8, noise3D(pos * 0.5));
-    color = mix(color, colTeal, accent);
-
-    color = saturateColor(color, 1.3);
-
-    return color;
-}
+// getCoralColor removed (moved to vertex shader)
 
 void main() {
     if (vDiscard > 0.5) {
@@ -99,7 +77,7 @@ void main() {
     vec3 normal = normalize(cross(fdx, fdy));
     vec3 pos = vFragPos;
 
-    vec3 coralBase = getCoralColor(pos);
+    vec3 coralBase = vCoralColor;
 
     // 上面は彩度を落とす
     float upFactor = normal.y;
@@ -111,8 +89,8 @@ void main() {
     // ライティング
     float depthFactor = smoothstep(uDepthMin, uDepthMax, pos.y);
 
-    float diff = max(0.0, dot(normal, uLightDirection));
-    diff = pow(diff * 0.5 + 0.5, 2.0);
+    float diff = max(0.0, dot(normal, uLightDirection)) * 0.5 + 0.5;;
+    diff *= diff;
 
     // ゴッドレイ
     float ray = godRay(pos, uTime);

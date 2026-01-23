@@ -24,6 +24,7 @@ export class UnderwaterEnvironment extends BaseEnvironment {
         this.lights = [];
         this.lightingUniforms = null;
         this.backgroundSphere = null;
+        this.proxyCollisions = [];
     }
 
     createBackgroundSphere() {
@@ -160,6 +161,15 @@ export class UnderwaterEnvironment extends BaseEnvironment {
             sharedAssets.floorMesh.material = this.seabedMaterial;
         }
 
+        // 判定用の透明マテリアル（visible:falseはレイキャストで検出されないため、透明度で対応）
+        const proxyCollisionMaterial = new THREE.MeshBasicMaterial({
+            visible: true,
+            transparent: true,
+            opacity: 0,
+            depthWrite: false
+        });
+
+
         // キャンパスモデルのマテリアルを差し替える
         if (sharedAssets.buildingRoot) {
             this.buildingRoot = sharedAssets.buildingRoot;
@@ -168,10 +178,58 @@ export class UnderwaterEnvironment extends BaseEnvironment {
 
             // configからモデルのスケールを適用
             sharedAssets.buildingRoot.scale.setScalar(modelScale);
+            sharedAssets.buildingRoot.updateMatrixWorld(true);
 
             sharedAssets.buildingRoot.traverse((child) => {
                 if (child.isMesh) {
                     child.material = underwaterMaterial;
+
+                    if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+                    const box = child.geometry.boundingBox;
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+
+                    // 判定オブジェクトを作成
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    if (maxDim >= 20.0) {
+                        // 子のワールド行列を取得
+                        const worldMatrix = child.matrixWorld;
+
+                        // バウンディングボックスの中心をワールド座標に変換
+                        const worldCenter = center.clone().applyMatrix4(worldMatrix);
+
+                        // ワールドスケールを取得
+                        const worldScale = child.getWorldScale(new THREE.Vector3());
+
+                        // スケールを適用したサイズ
+                        const scaledSize = size.clone().multiply(worldScale);
+
+                        // ジオメトリは原点中心で作成
+                        const proxyGeo = new THREE.BoxGeometry(scaledSize.x, scaledSize.y, scaledSize.z);
+
+                        const proxyMesh = new THREE.Mesh(proxyGeo, proxyCollisionMaterial);
+
+                        // ワールド座標の中心に配置
+                        proxyMesh.position.copy(worldCenter);
+                        // 回転をコピー
+                        proxyMesh.quaternion.copy(child.getWorldQuaternion(new THREE.Quaternion()));
+                        // スケールは既にジオメトリに適用済みなので1.0
+                        proxyMesh.scale.set(1, 1, 1);
+
+                        proxyMesh.updateMatrix();
+                        proxyMesh.matrixAutoUpdate = false;
+
+                        // ミニマップから除外
+                        proxyMesh.userData.excludeFromMinimap = true;
+
+                        this.scene.add(proxyMesh);
+                        this.proxyCollisions.push(proxyMesh);
+                    } else {
+                        child.visible = false;
+                        return;
+                    }
 
                     if (!child.userData.isTessellated) {
                         try {
@@ -212,7 +270,9 @@ export class UnderwaterEnvironment extends BaseEnvironment {
         this.fishController = new FishController(this.scene, this.config, this.lightingUniforms);
 
         // 衝突判定用に建物のメッシュを渡す
-        if (sharedAssets.buildingRoot) {
+        if (this.proxyCollisions.length > 0) {
+            this.fishController.setObstacles(this.proxyCollisions);
+        } else if (sharedAssets.buildingRoot) {
             const obstacles = [];
             sharedAssets.buildingRoot.traverse((child) => {
                 if (child.isMesh && child.visible) {
@@ -247,6 +307,14 @@ export class UnderwaterEnvironment extends BaseEnvironment {
     dispose() {
         if (this.fishController) {
             this.fishController.dispose();
+        }
+
+        if (this.proxyCollisions) {
+            this.proxyCollisions.forEach(proxy => {
+                this.scene.remove(proxy);
+                proxy.geometry.dispose();
+            });
+            this.proxyCollisions = [];
         }
 
         // ライトを削除

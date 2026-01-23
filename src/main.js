@@ -21,8 +21,8 @@ document.body.appendChild(renderer.domElement);
 const envManager = new EnvironmentManager();
 
 const controls = new KeyboardControls(camera, renderer.domElement, WorldConfig.Camera);
-const movementUI = new MovementUI(envManager); // EnvironmentManagerを渡す（SSOT）
 const minimapUI = new MinimapUI(scene, camera);
+const movementUI = new MovementUI(envManager, minimapUI); // EnvironmentManagerとMinimapUIを渡す
 
 // キーボードでのモード変更時のコールバック（GキーでUI更新）
 controls.onModeChange = (grounded) => {
@@ -53,9 +53,9 @@ const clock = new THREE.Clock();
 
 // 非同期で初期化
 envManager.init(scene, renderer, camera).then(() => {
-    envManager.switchMode('Underwater');
+    envManager.switchMode('Urban');
     // UIを初期環境に同期（SSOT）
-    movementUI.setEnvironment('Underwater');
+    movementUI.setEnvironment('Urban');
     setupCollisions();
 });
 

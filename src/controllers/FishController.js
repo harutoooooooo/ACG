@@ -17,15 +17,55 @@ export class FishController {
         this.scales = new Float32Array(this.count);
         this.obstacles = [];
 
+        this.cellSize = config.boid?.perceptionRadius ?? 15.0;
+
+        // 空間の境界サイズ
+        const w = config.bounds?.width ?? 200;
+        const h = config.bounds?.height ?? 100;
+        const d = config.bounds?.depth ?? 200;
+
+        // グリッドの次元数を計算
+        this.gridDimX = Math.ceil(w / this.cellSize) + 2;
+        this.gridDimY = Math.ceil(h / this.cellSize) + 2;
+        this.gridDimZ = Math.ceil(d / this.cellSize) + 2;
+
+        this.gridOffX = Math.floor(this.gridDimX / 2);
+        this.gridOffY = Math.floor(this.gridDimY / 2);
+        this.gridOffZ = Math.floor(this.gridDimZ / 2);
+
+        // リンクリスト法
+        // 各セルの「最初のボイドのインデックス
+        this.gridHead = new Int32Array(this.gridDimX * this.gridDimY * this.gridDimZ);
+        // 同じセルにいる次のボイドのインデックス
+        this.gridNext = new Int32Array(this.count);
+
+        this.tempNeighbors = [];
+
+        this.tempObstacles = [];
+
+        this._lookTarget = new THREE.Vector3();
+
         this.init();
     }
 
     setObstacles(obstacles) {
         this.obstacles = obstacles;
+
+        const perceptionR = this.config.boid?.perceptionRadius;
+
+        // 各オブジェクトのバウンディングボックスを事前に計算してキャッシュ
+        this.obstacles.forEach(obs => {
+            if (!obs.geometry.boundingSphere) {
+                obs.geometry.computeBoundingSphere();
+            }
+
+            const maxScale = Math.max(obs.scale.x, obs.scale.y, obs.scale.z);
+            obs.userData.worldRadius = obs.geometry.boundingSphere.radius * maxScale;
+            obs.userData.checkThreshold = perceptionR + obs.userData.worldRadius;
+        });
     }
 
     createFishGeometry(length = 1.0, radius = 0.3) {
-        // コンフィグ値またはデフォルト値を使用
         const geometry = new THREE.BufferGeometry();
 
         const noseZ = length * 0.5;
@@ -134,6 +174,19 @@ export class FishController {
         this.scene.add(this.mesh);
     }
 
+    _getGridIndex(x, y, z) {
+        const gx = Math.floor(x / this.cellSize) + this.gridOffX;
+        const gy = Math.floor(y / this.cellSize) + this.gridOffY;
+        const gz = Math.floor(z / this.cellSize) + this.gridOffZ;
+
+        if (gx < 0 || gx >= this.gridDimX ||
+            gy < 0 || gy >= this.gridDimY ||
+            gz < 0 || gz >= this.gridDimZ) {
+            return -1;
+        }
+        return gx + gy * this.gridDimX + gz * this.gridDimX * this.gridDimY;
+    }
+
     update(time) {
         if(!this.mesh) {
             return;
@@ -141,21 +194,104 @@ export class FishController {
 
         this.mesh.material.uniforms.uTime.value = time;
 
+        this.gridHead.fill(-1);
+
+        for (let i = 0; i < this.count; i++) {
+            const boid = this.boids[i];
+            const idx = this._getGridIndex(boid.position.x, boid.position.y, boid.position.z);
+
+            if (idx !== -1) {
+                this.gridNext[i] = this.gridHead[idx];
+                this.gridHead[idx] = i;
+            } else {
+                this.gridNext[i] = -1;
+            }
+        }
+
         for (let i = 0; i < this.count; i++) {
             const boid = this.boids[i];
 
-            // 群れの動きを計算し更新
-            boid.flock(this.boids);
-            boid.avoidObstacles(this.raycaster, this.obstacles);
+            this.tempNeighbors.length = 0;
+
+            // 魚の位置をセル単位で計算
+            const bx = Math.floor(boid.position.x / this.cellSize) + this.gridOffX;
+            const by = Math.floor(boid.position.y / this.cellSize) + this.gridOffY;
+            const bz = Math.floor(boid.position.z / this.cellSize) + this.gridOffZ;
+
+            // 3x3x3 近傍セルを走査
+            for (let z = bz - 1; z <= bz + 1; z++) {
+                if (z < 0 || z >= this.gridDimZ) continue;
+                const zOffset = z * this.gridDimX * this.gridDimY;
+
+                for (let y = by - 1; y <= by + 1; y++) {
+                    if (y < 0 || y >= this.gridDimY) continue;
+                    const yOffset = y * this.gridDimX;
+
+                    for (let x = bx - 1; x <= bx + 1; x++) {
+                        if (x < 0 || x >= this.gridDimX) continue;
+
+                        let neighborId = this.gridHead[x + yOffset + zOffset];
+                        while (neighborId !== -1) {
+                            if (neighborId !== i) {
+                                const neighbor = this.boids[neighborId];
+                                const dx = Math.abs(boid.position.x - neighbor.position.x);
+
+                                // perceptionRadiusよりもX距離が離れていたらスキップ
+                                if (dx <= this.cellSize) {
+                                    const dy = Math.abs(boid.position.y - neighbor.position.y);
+                                    if (dy <= this.cellSize) {
+                                        const dz = Math.abs(boid.position.z - neighbor.position.z);
+                                        if (dz <= this.cellSize) {
+                                            this.tempNeighbors.push(neighbor);
+                                        }
+                                    }
+                                }
+                            }
+                            neighborId = this.gridNext[neighborId];
+                        }
+                    }
+                }
+            }
+
+            boid.flock(this.tempNeighbors);
+
+            this.tempObstacles.length = 0;
+
+            for (let k = 0; k < this.obstacles.length; k++) {
+                const obs = this.obstacles[k];
+                const threshold = obs.userData.checkThreshold;
+
+                // 各軸の差分
+                const dx = Math.abs(boid.position.x - obs.position.x);
+                if (dx > threshold) continue;
+
+                const dy = Math.abs(boid.position.y - obs.position.y);
+                if (dy > threshold) continue;
+
+                const dz = Math.abs(boid.position.z - obs.position.z);
+                if (dz > threshold) continue;
+
+                // 候補に残った場合のみ、正確な二乗距離を計算
+                const distSq = boid.position.distanceToSquared(obs.position);
+
+                if (distSq < threshold * threshold) {
+                    this.tempObstacles.push(obs);
+                }
+            }
+
+            if (this.tempObstacles.length > 0) {
+                boid.avoidObstacles(this.raycaster, this.tempObstacles);
+            }
+
             boid.update();
 
-            // Shaderに魚の位置を渡す
+            // Shader用ダミー更新
             this.dummy.position.copy(boid.position);
             const velocity = boid.velocity;
             if (velocity.lengthSq() > 0.0001) {
-                this.dummy.lookAt(this.dummy.position.clone().add(velocity));
+                this._lookTarget.copy(boid.position).add(velocity);
+                this.dummy.lookAt(this._lookTarget);
             }
-
             this.dummy.scale.setScalar(this.scales[i]);
             this.dummy.updateMatrix();
             this.mesh.setMatrixAt(i, this.dummy.matrix);
@@ -169,5 +305,8 @@ export class FishController {
         this.mesh.material.dispose();
         this.boids = [];
         this.obstacles = [];
+        this.gridHead = null;
+        this.gridNext = null;
+        this.tempNeighbors = null;
     }
 }

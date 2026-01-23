@@ -2,6 +2,7 @@ varying vec3 vNormal;
 varying vec3 vFragPos;
 varying float vDiscard;
 varying vec3 vWorldNormal;
+varying vec3 vCoralColor;
 
 uniform float uTime;
 uniform float uScale;
@@ -59,6 +60,31 @@ float snoise(vec3 v) {
     return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
 }
 
+vec3 saturateColor(vec3 color, float amount) {
+    float gray = dot(color, vec3(0.299, 0.587, 0.114));
+    return mix(vec3(gray), color, amount);
+}
+
+vec3 getCoralColor(vec3 pos) {
+    float n1 = snoise(pos * 0.2) * 0.5 + 0.5;
+    float n2 = snoise(pos * 0.2 + vec3(12.0)) * 0.5 + 0.5;
+
+    vec3 colPink   = vec3(1.0, 0.35, 0.5);
+    vec3 colPurple = vec3(0.55, 0.3, 0.8);
+    vec3 colOrange = vec3(1.0, 0.55, 0.15);
+    vec3 colTeal   = vec3(0.0, 0.9, 0.75);
+
+    vec3 color = mix(colPink, colPurple, smoothstep(0.2, 0.8, n1));
+    color = mix(color, colOrange, smoothstep(0.4, 0.6, n2));
+
+    float accent = smoothstep(0.7, 0.8, n1);
+    color = mix(color, colTeal, accent);
+
+    color = saturateColor(color, 1.3);
+
+    return color;
+}
+
 void main() {
     float noiseScale = 0.5;
 
@@ -78,6 +104,8 @@ void main() {
 
     vec4 mvPosition = modelViewMatrix * vec4(newPosition, 1.0);
     gl_Position = projectionMatrix * mvPosition;
+
+    vCoralColor = getCoralColor(vFragPos);
 
     #include <fog_vertex>
 }
