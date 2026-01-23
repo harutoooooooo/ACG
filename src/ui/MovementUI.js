@@ -2,16 +2,17 @@
  * モダンでスタイリッシュな統一UI
  */
 export class MovementUI {
-  constructor(environmentManager = null) {
+  constructor(environmentManager = null, minimapUI = null) {
     this.container = null;
     this.currentMode = 'free';
     this.environmentManager = environmentManager; // SSOT for environment
+    this.minimapUI = minimapUI; // ミニマップへの参照
     this.environments = ['Urban', 'Nature', 'CyberPunk', 'Underwater']; // 利用可能な環境リスト
     this.onEnvironmentChange = null;
     this.onFlightModeChange = null;
     this.onControlModeChange = null; // 操作モード変更時のコールバック
-    this.currentControlMode = 'keyboard'; // 'keyboard' or 'mouseOnly'
-    this.isOpen = true; // サイドバーが開いているか
+    this.currentControlMode = 'mouseOnly'; // 'keyboard' or 'mouseOnly'
+    this.isOpen = false; // サイドバーが開いているか
     this._createUI();
     this._attachKeyboardListener();
   }
@@ -871,9 +872,13 @@ export class MovementUI {
     if (this.isOpen) {
       this.container.classList.remove('closed');
       if (this.mKeyHint) this.mKeyHint.style.display = 'flex';
+      if (this.hintMessage) this.hintMessage.style.display = 'block';
+      if (this.minimapUI) this.minimapUI.show();
     } else {
       this.container.classList.add('closed');
       if (this.mKeyHint) this.mKeyHint.style.display = 'none';
+      if (this.hintMessage) this.hintMessage.style.display = 'none';
+      if (this.minimapUI) this.minimapUI.hide();
     }
   }
 
@@ -881,12 +886,16 @@ export class MovementUI {
     this.isOpen = true;
     this.container.classList.remove('closed');
     if (this.mKeyHint) this.mKeyHint.style.display = 'flex';
+    if (this.hintMessage) this.hintMessage.style.display = 'block';
+    if (this.minimapUI) this.minimapUI.show();
   }
 
   close() {
     this.isOpen = false;
     this.container.classList.add('closed');
     if (this.mKeyHint) this.mKeyHint.style.display = 'none';
+    if (this.hintMessage) this.hintMessage.style.display = 'none';
+    if (this.minimapUI) this.minimapUI.hide();
   }
 
   setMode(grounded) {

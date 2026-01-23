@@ -195,6 +195,18 @@ export class MinimapUI {
     this.renderer.render(this.minimapScene, this.camera);
   }
 
+  show() {
+    if (this.container) {
+      this.container.style.display = 'block';
+    }
+  }
+
+  hide() {
+    if (this.container) {
+      this.container.style.display = 'none';
+    }
+  }
+
   dispose() {
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);

@@ -1,7 +1,22 @@
 export const WorldConfig = {
     Camera: {
         yaw: 0.9,
-        pitch: -0.3
+        pitch: -0.3,
+        // マウス操作設定
+        moveSpeed: 0.5,
+        lookSpeed: 0.002,
+        rotateSpeed: 0.5,
+        panSpeed: 1.0,
+        zoomSpeed: 1.0,
+        minDistance: 0.05,
+        maxDistance: 500,
+        minPanDistance: 20.0,  // 近距離でもパンが効く最低距離
+        minY: 0.5,             // 地面より下に行かない最低高さ
+        dampingFactor: 0.05,
+        eyeHeight: 1.7,
+        footHeight: 0.2,
+        collisionDistance: 2.0,
+        playerRadius: 1.0
     },
     Urban: {
         modelScale: 1.0,
@@ -62,7 +77,7 @@ export const WorldConfig = {
             floorColor: '#1a3a52',  // 深海の青
             gridColor1: '#2a5a7a',  // 明るい青
             gridColor2: '#0a2a42',  // 暗い青
-            showGrid: true
+            showGrid: false
         },
 
         // 魚が泳ぐ範囲
@@ -99,10 +114,35 @@ export const WorldConfig = {
             cohesionWeight: 0.1
         },
 
+        // シェーダー共通設定
         shader: {
             causticScale: 5.0,
-            depthMin: -15.0,
-            depthMax: 40.0
+            depthMin: -20.0,
+            depthMax: 30.0
+        },
+
+        // 海底ライティング設定（全シェーダー共通）
+        lighting: {
+            lightDirection: { x: 0.5, y: 1.0, z: 0.5 },
+            ambientColor: '#aed2f1',
+            ambientIntensity: 0.3,
+            diffuseIntensity: 0.9,
+            causticColor: '#ffffff',
+            causticIntensity: 0.4,
+            // ゴッドレイ設定
+            godRayIntensity: 0.7,   // 光の強さ（0.0〜2.0）
+            godRaySpeed: 0.6,       // 移動速度（0.05〜0.3）
+            godRayScale: 0.1       // 光の筋のサイズ（小さいほど大きな筋）
+        },
+
+        // 色設定
+        colors: {
+            deepWater: '#005cb2',
+            shallowWater: '#53b4d7',
+            sand: '#e1d3a7',
+            sandDark: '#aaaaaa',
+            rock: '#341c00',
+            sediment: '#000000'
         }
     }
 };
