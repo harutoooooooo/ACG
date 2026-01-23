@@ -95,11 +95,12 @@ export const WorldConfig = {
             density: 0.01
         },
 
-        // 魚のメッシュサイズ
+        // 魚のメッシュサイズ（定数）
         fish: {
-            meshRadius: 0.3,
-            meshLength: 1.2,
-            count: 500
+            count: 500,
+            baseScale: 1.5,
+            meshRadius: 0.3, // 以前より少し太く
+            meshLength: 1.2  // 長さ
         },
 
         // Boidアルゴリズムのパラメータ
