@@ -146,7 +146,10 @@ export class MinimapUI {
       }
 
       if (obj.isMesh && !this.sceneObjectsMap.has(obj.uuid)) {
-        // 簡易的なクローン（ジオメトリとマテリアルを共有）
+        // ワールド行列を更新
+        obj.updateMatrixWorld(true);
+
+        // 簡易的なクローン（ジオメトリを共有）
         const minimapObj = new THREE.Mesh(
           obj.geometry,
           new THREE.MeshBasicMaterial({
@@ -155,11 +158,9 @@ export class MinimapUI {
           })
         );
 
-        minimapObj.position.copy(obj.position);
-        minimapObj.rotation.copy(obj.rotation);
-        minimapObj.scale.copy(obj.scale);
+        // ワールド行列をコピー（入れ子でも正しい位置になる）
         minimapObj.matrixAutoUpdate = false;
-        minimapObj.matrix.copy(obj.matrix);
+        minimapObj.matrix.copy(obj.matrixWorld);
 
         this.minimapScene.add(minimapObj);
         this.sceneObjectsMap.set(obj.uuid, minimapObj);
@@ -168,10 +169,8 @@ export class MinimapUI {
   }
 
   update() {
-    // 初回またはオブジェクトが追加された場合に同期
-    if (this.sceneObjectsMap.size === 0 || this.mainScene.children.length !== this.sceneObjectsMap.size + 1) {
-      this.syncSceneObjects();
-    }
+    // 毎フレーム同期チェック（新しいメッシュが追加された可能性がある）
+    this.syncSceneObjects();
 
     // プレイヤーマーカーと円をメインカメラの位置に同期
     this.playerMarker.position.x = this.mainCamera.position.x;
