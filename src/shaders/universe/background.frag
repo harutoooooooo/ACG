@@ -1,7 +1,7 @@
 uniform float uTime;
 uniform vec3 uNebulaColor1;
 uniform vec3 uNebulaColor2;
-uniform float uStarDensity;
+uniform samplerCube uStarTexture;
 
 varying vec2 vUv;
 varying vec3 vWorldPos;
@@ -49,40 +49,15 @@ float fbm(vec3 p) {
 }
 
 // --- Stars ---
-float stars(vec3 dir, float density) {
-    vec3 p = dir * 300.0;
-    vec3 cell = floor(p);
-    vec3 local = fract(p) - 0.5;
+float stars(vec3 dir) {
+    float starBrightness = textureCube(uStarTexture, dir).r;
     
-    float star = 0.0;
-    for (int x = -1; x <= 1; x++) {
-        for (int y = -1; y <= 1; y++) {
-            for (int z = -1; z <= 1; z++) {
-                vec3 offset = vec3(x, y, z);
-                vec3 cellPos = cell + offset;
-                float r = hash31(cellPos);
-                
-                if (r > density) continue;
-                
-                vec3 starPos = offset + vec3(hash31(cellPos + 1.0), 
-                                             hash31(cellPos + 2.0), 
-                                             hash31(cellPos + 3.0)) - 0.5;
-                float d = length(local - starPos);
-                
-                float brightness = hash31(cellPos + 4.0);
-                brightness = 0.5 + 0.5 * brightness;
-                
-                // twinkle
-                float twinkle = sin(uTime * (2.0 + hash31(cellPos + 5.0) * 4.0) + hash31(cellPos + 6.0) * 6.28);
-                twinkle = 0.7 + 0.3 * twinkle;
-
-                // adjust size of stars
-                star += brightness * twinkle * smoothstep(0.15, 0.0, d);
-            }
-        }
-    }
-
-    return star;
+    // twinkle effect
+    float twinklePhase = hash31(floor(dir * 300.0)) * 6.28;
+    float twinkleSpeed = 2.0 + hash31(floor(dir * 300.0) + 1.0) * 4.0;
+    float twinkle = 0.7 + 0.3 * sin(uTime * twinkleSpeed + twinklePhase);
+    
+    return starBrightness * twinkle;
 }
 
 // --- Nebula ---
@@ -106,7 +81,7 @@ void main() {
     vec3 deepSpace = vec3(0.02, 0.01, 0.05);
     
     // stars
-    float starField = stars(dir, uStarDensity);
+    float starField = stars(dir);
     
     // nebula
     vec3 nebulaColor = nebula(dir);

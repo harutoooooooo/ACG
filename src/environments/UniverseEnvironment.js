@@ -18,6 +18,74 @@ export class UniverseEnvironment extends BaseEnvironment {
         this.windowMaterial = null;
         this.roofMaterial = null;
         this.backgroundMaterial = null;
+        this.starTexture = null;
+    }
+
+    // Generate a CubeMap texture with pre-computed star positions
+    generateStarCubeMap(size, density) {
+        const images = [];
+
+        // Simple seeded random for reproducibility
+        const seededRandom = (seed) => {
+            const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+            return x - Math.floor(x);
+        };
+
+        // Generate star data for each face
+        for (let face = 0; face < 6; face++) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // black background
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, size, size);
+
+            // Grid-based star placement in 2D texture space
+            const gridSize = 8; // pixels per cell
+            const cellsPerSide = Math.floor(size / gridSize);
+
+            for (let cellY = 0; cellY < cellsPerSide; cellY++) {
+                for (let cellX = 0; cellX < cellsPerSide; cellX++) {
+                    // Unique seed for this cell on this face
+                    const cellSeed = face * 100000 + cellY * 1000 + cellX;
+                    const r = seededRandom(cellSeed);
+
+                    // Determine if this cell has a star based on density
+                    if (r > density) continue;
+
+                    // Star position within cell (random offset)
+                    const starX = cellX * gridSize + seededRandom(cellSeed + 1) * gridSize;
+                    const starY = cellY * gridSize + seededRandom(cellSeed + 2) * gridSize;
+
+                    // Star brightness
+                    const brightness = 3.0 * seededRandom(cellSeed);
+
+                    // Star size
+                    const starSize = seededRandom(cellSeed);
+
+                    // Draw the star as a gradient circle
+                    const gradient = ctx.createRadialGradient(starX, starY, 0, starX, starY, starSize);
+                    const alpha = Math.floor(brightness * 255);
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${brightness})`);
+                    gradient.addColorStop(0.5, `rgba(255, 255, 255, ${brightness * 0.5})`);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(starX, starY, starSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            images.push(canvas);
+        }
+
+        const cubeTexture = new THREE.CubeTexture(images);
+        cubeTexture.needsUpdate = true;
+
+        return cubeTexture;
     }
 
     init(sharedAssets) {
@@ -54,11 +122,13 @@ export class UniverseEnvironment extends BaseEnvironment {
             fragmentShader: roofFragmentShader
         });
 
+        this.starTexture = this.generateStarCubeMap(512, shader.starDensity);
+
         // planetarium-like shader material
         this.backgroundMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: 0.0 },
-                uStarDensity: { value: shader.starDensity },
+                uStarTexture: { value: this.starTexture },
                 uNebulaColor1: { value: new THREE.Color().fromArray(shader.nebulaColor1) },
                 uNebulaColor2: { value: new THREE.Color().fromArray(shader.nebulaColor2) }
             },
@@ -139,6 +209,10 @@ export class UniverseEnvironment extends BaseEnvironment {
         if (this.backgroundMaterial) {
             this.backgroundMaterial.dispose();
             this.backgroundMaterial = null;
+        }
+        if (this.starTexture) {
+            this.starTexture.dispose();
+            this.starTexture = null;
         }
 
         // remove lights
