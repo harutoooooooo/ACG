@@ -1,3 +1,10 @@
+import { UrbanEnvironment } from '../environments/UrbanEnvironment.js';
+import { NatureEnvironment } from '../environments/NatureEnvironment.js';
+import { CyberPunkEnvironment } from '../environments/CyberPunkEnvironment.js';
+import { UnderwaterEnvironment } from '../environments/UnderwaterEnvironment.js';
+import { UniverseEnvironment } from '../environments/UniverseEnvironment.js';
+import { XEnvironment } from '../environments/XEnvironment.js';
+
 const UrbanConfig = {
     modelScale: 1.0,
     useSharedLights: true,
@@ -204,11 +211,18 @@ export const WorldConfig = {
     },
 
     Environments: [
-        { id: 'Urban', name: 'Urban', icon: '🏙️' },
-        { id: 'Nature', name: 'Nature', icon: '🌿' },
-        { id: 'CyberPunk', name: 'CyberPunk', icon: '🤖' },
-        { id: 'Underwater', name: 'Underwater', icon: '🌊' },
-        { id: 'Universe', name: 'Universe', icon: '🌌' },
-        { id: 'X', name: '???', icon: '❓' }
+        { id: 'Urban', name: 'Urban', icon: '🏙️', class: UrbanEnvironment, config: UrbanConfig },
+        { id: 'Nature', name: 'Nature', icon: '🌿', class: NatureEnvironment, config: null }, // Natureは内部でデフォルトConfig
+        { id: 'CyberPunk', name: 'CyberPunk', icon: '🤖', class: CyberPunkEnvironment, config: null },
+        { id: 'Underwater', name: 'Underwater', icon: '🌊', class: UnderwaterEnvironment, config: null },
+        { id: 'Universe', name: 'Universe', icon: '🌌', class: UniverseEnvironment, config: null },
+        { id: 'X', name: '???', icon: '❓', class: XEnvironment, config: null } // XのconfigはWorldConfig.Xを別途参照する形式を維持
     ]
 };
+
+// クラス登録後にConfigへの動的参照を補完（循環参照回避のため）
+WorldConfig.Environments.forEach(env => {
+    if (!env.config && WorldConfig[env.id]) {
+        env.config = WorldConfig[env.id];
+    }
+});

@@ -54,7 +54,6 @@ const clock = new THREE.Clock();
 // 非同期で初期化
 envManager.init(scene, renderer, camera).then(() => {
     envManager.switchMode('Urban');
-    movementUI.setEnvironment('Urban');
     setupCollisions();
 
     minimapUI.syncSceneObjects();

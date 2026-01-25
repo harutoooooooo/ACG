@@ -1,14 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// 各環境クラスをimport
-import { UrbanEnvironment } from '../environments/UrbanEnvironment.js';
-import { NatureEnvironment } from '../environments/NatureEnvironment.js';
-import { CyberPunkEnvironment } from '../environments/CyberPunkEnvironment.js';
-import { UnderwaterEnvironment } from '../environments/UnderwaterEnvironment.js';
-import { UniverseEnvironment } from '../environments/UniverseEnvironment.js';
-import { XEnvironment } from '../environments/XEnvironment.js';
-
 import { WorldConfig } from '../config/WorldConfig.js';
 
 // 環境を管理するシングルトンクラス
@@ -31,6 +23,8 @@ export class EnvironmentManager {
         this.floorMesh = null;
         this.gridHelper = null;
         this.lights = [];
+
+        this.listeners = []; // 監視者のリスト
     }
 
     async init(scene, renderer, camera) {
@@ -186,46 +180,18 @@ export class EnvironmentManager {
         // 環境名を保存（SSOT）
         this.currentModeName = modeName;
 
-        let config = null;
+        // 環境定義をWorldConfigから取得
+        const envDef = WorldConfig.Environments.find(e => e.id === modeName);
 
-        switch (modeName) {
-            case 'Urban':
-                config = WorldConfig.Urban;
-                this.currentEnvironment = new UrbanEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
-            case 'Nature':
-                config = WorldConfig.Nature;
-                this.currentEnvironment = new NatureEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
-            case 'CyberPunk':
-                config = WorldConfig.CyberPunk;
-                this.currentEnvironment = new CyberPunkEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
-            case 'Underwater':
-                config = WorldConfig.Underwater;
-                this.currentEnvironment = new UnderwaterEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
-            case 'Universe':
-                config = WorldConfig.Universe;
-                this.currentEnvironment = new UniverseEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
-            case 'X':
-                config = WorldConfig.X;
-                this.currentEnvironment = new XEnvironment(
-                    this.scene, this.renderer, this.camera, config
-                );
-                break;
+        if (!envDef || !envDef.class) {
+            console.error(`Environment definition for ${modeName} not found or missing class.`);
+            return;
         }
+
+        const config = envDef.config || {};
+        this.currentEnvironment = new envDef.class(
+            this.scene, this.renderer, this.camera, config
+        );
 
         // 床とライトを作成
         if (config) {
@@ -245,6 +211,19 @@ export class EnvironmentManager {
         if (this.currentEnvironment) {
             this.currentEnvironment.init(this.sharedAssets);
         }
+
+        // 状態変更を通知
+        this.notifyEnvironmentChange(modeName);
+    }
+
+    // 監視者（UIなど）を登録
+    subscribe(callback) {
+        this.listeners.push(callback);
+    }
+
+    // 通知を実行
+    notifyEnvironmentChange(modeName) {
+        this.listeners.forEach(callback => callback(modeName));
     }
 
     getCurrentEnvironment() {

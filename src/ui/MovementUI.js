@@ -12,6 +12,13 @@ export class MovementUI {
     this.isOpen = false; // サイドバーが開いているか
     this._createUI();
     this._attachKeyboardListener();
+
+    // EnvironmentManagerの状態を監視（Observableパターン）
+    if (this.environmentManager) {
+      this.environmentManager.subscribe((envId) => {
+        this.setEnvironment(envId);
+      });
+    }
   }
 
   _createUI() {
