@@ -1,7 +1,6 @@
 // src/environments/UrbanEnvironment.js
 import * as THREE from 'three';
 import { BaseEnvironment } from './BaseEnvironment.js';
-import { FishController } from '../controllers/FishController.js';
 
 import vertexShader from '../shaders/building/shader.vert';
 import windowFragmentShader from '../shaders/building/window.frag';
