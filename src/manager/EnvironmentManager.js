@@ -7,6 +7,7 @@ import { NatureEnvironment } from '../environments/NatureEnvironment.js';
 import { CyberPunkEnvironment } from '../environments/CyberPunkEnvironment.js';
 import { UnderwaterEnvironment } from '../environments/UnderwaterEnvironment.js';
 import { UniverseEnvironment } from '../environments/UniverseEnvironment.js';
+import { XEnvironment } from '../environments/XEnvironment.js';
 
 import { WorldConfig } from '../config/WorldConfig.js';
 
@@ -150,9 +151,14 @@ export class EnvironmentManager {
             collisionObjects.push(this.floorMesh);
         }
 
+        // 現在の環境が個別のbuildingRootを持っている場合はそれを使う
+        const targetRoot = (this.currentEnvironment && this.currentEnvironment.buildingRoot)
+            ? this.currentEnvironment.buildingRoot
+            : this.sharedAssets.buildingRoot;
+
         // 建物のメッシュを追加
-        if (this.sharedAssets.buildingRoot) {
-            this.sharedAssets.buildingRoot.traverse((child) => {
+        if (targetRoot) {
+            targetRoot.traverse((child) => {
                 if (child.isMesh) {
                     collisionObjects.push(child);
                 }
@@ -165,6 +171,12 @@ export class EnvironmentManager {
     switchMode(modeName) {
         // 既存環境の破棄
         if (this.currentEnvironment) {
+            // 現在の環境が個別のbuildingRootを持っている場合はそれを削除
+            if (this.currentEnvironment.buildingRoot) {
+                this.scene.remove(this.currentEnvironment.buildingRoot);
+            }
+
+            // 共有のbuildingRootもシーンから削除
             if (this.sharedAssets.buildingRoot) {
                 this.scene.remove(this.sharedAssets.buildingRoot);
             }
@@ -207,6 +219,12 @@ export class EnvironmentManager {
                     this.scene, this.renderer, this.camera, config
                 );
                 break;
+            case 'X':
+                config = WorldConfig.X;
+                this.currentEnvironment = new XEnvironment(
+                    this.scene, this.renderer, this.camera, config
+                );
+                break;
         }
 
         // 床とライトを作成
@@ -231,6 +249,10 @@ export class EnvironmentManager {
 
     getCurrentEnvironment() {
         return this.currentModeName;
+    }
+
+    getAvailableEnvironments() {
+        return WorldConfig.Environments;
     }
 
     update(elapsedTime) {

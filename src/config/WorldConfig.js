@@ -1,3 +1,21 @@
+const UrbanConfig = {
+    modelScale: 1.0,
+    useSharedLights: true,
+
+    floor: {
+        floorSize: 500,
+        floorColor: '#4a4a4a',
+        gridColor1: '#ffff00',
+        gridColor2: '#666666',
+        showGrid: true
+    },
+
+    shader: {
+        textureScale: 0.01,
+        windowSize: 0.2,
+    }
+};
+
 export const WorldConfig = {
     Camera: {
         yaw: 0.9,
@@ -18,23 +36,8 @@ export const WorldConfig = {
         collisionDistance: 2.0,
         playerRadius: 1.0
     },
-    Urban: {
-        modelScale: 1.0,
-        useSharedLights: true, // 共通ライトを使用
 
-        floor: {
-            floorSize: 500,
-            floorColor: '#4a4a4a',  // アスファルト
-            gridColor1: '#ffff00',   // 黄色
-            gridColor2: '#666666',   // グレー
-            showGrid: true
-        },
-
-        shader: {
-            textureScale: 0.01,
-            windowSize: 0.2,
-        }
-    },
+    Urban: UrbanConfig,
 
     Nature: {
         modelScale: 1.0,
@@ -171,5 +174,32 @@ export const WorldConfig = {
             nebulaColor1: [0.1, 0.0, 0.3],
             nebulaColor2: [0.0, 0.2, 0.4]
         }
-    }
+    },
+
+    X: {
+        ...UrbanConfig,
+        laser: {
+            color: 0xff0000,
+            transparent: true,
+            opacity: 1.0,
+            duration: 0.3,
+            thickness: 0.1,
+            strength: 8.0
+        },
+        crosshair: {
+            color: 'rgba(255, 0, 0, 0.5)',
+            glowColor: 'rgba(255, 0, 0, 0.8)',
+            size: 30,
+            dotSize: 4
+        }
+    },
+
+    Environments: [
+        { id: 'Urban', name: 'Urban', icon: '🏙️' },
+        { id: 'Nature', name: 'Nature', icon: '🌿' },
+        { id: 'CyberPunk', name: 'CyberPunk', icon: '🤖' },
+        { id: 'Underwater', name: 'Underwater', icon: '🌊' },
+        { id: 'Universe', name: 'Universe', icon: '🌌' },
+        { id: 'X', name: '???', icon: '❓' }
+    ]
 };
